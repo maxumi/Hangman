@@ -11,12 +11,30 @@ namespace HangmanServer
 {
     internal class HangmanServerClass
     {
+        public static int count = 0;
+        public static List<char> CorrectChars = new List<char>();
         public HangmanServerClass()
         {
             IPEndPoint endpoint = GetServerEndpoint();
+            Socket listener = new(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            listener.Bind(endpoint);
+            listener.Listen(10);
+            Console.WriteLine($"Server Listening on: {listener.LocalEndPoint}");
+            StartServer(listener);
+            
         }
+        private void StartServer(Socket listener)
+        {
+            Socket handler = listener.Accept();
+            Console.WriteLine($"Accepting connection from {handler.RemoteEndPoint}");
+            string? msg = null;
+            byte[] buffer = new byte[1024];
+            GameClass game = new(handler);
+            handler.Shutdown(SocketShutdown.Both);
+            handler.Close();
 
-        private IPEndPoint GetServerEndpoint()
+        }
+            private IPEndPoint GetServerEndpoint()
         {
             //Gets the hostname of the machine
             string strHostName = Dns.GetHostName();
