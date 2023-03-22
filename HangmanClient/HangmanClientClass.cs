@@ -72,7 +72,7 @@ namespace HangmanClient
             string input = Console.ReadLine();
             if (string.IsNullOrEmpty(input))
             {
-                return IPAddress.Parse("127.0.0.1");
+                return IPAddress.Parse("192.168.2.3");
             }
             return IPAddress.Parse(input);
         }

@@ -11,8 +11,6 @@ namespace HangmanServer
 {
     internal class HangmanServerClass
     {
-        public static int count = 0;
-        public static List<char> CorrectChars = new List<char>();
         public HangmanServerClass()
         {
             IPEndPoint endpoint = GetServerEndpoint();

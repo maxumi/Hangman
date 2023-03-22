@@ -43,7 +43,7 @@ namespace HangmanServer
                     msg += Encoding.ASCII.GetString(buffer, 0, received);
                 }
 
-                // Check if the guess is one c
+                // Process the client's answer
                 char input = msg[0];
                 var guess = char.ToLower(input);
 
