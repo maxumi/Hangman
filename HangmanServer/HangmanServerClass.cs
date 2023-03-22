@@ -27,8 +27,6 @@ namespace HangmanServer
         {
             Socket handler = listener.Accept();
             Console.WriteLine($"Accepting connection from {handler.RemoteEndPoint}");
-            string? msg = null;
-            byte[] buffer = new byte[1024];
             GameClass game = new(handler);
             handler.Shutdown(SocketShutdown.Both);
             handler.Close();

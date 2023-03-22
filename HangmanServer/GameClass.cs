@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace HangmanServer
 {
     internal class GameClass
     {
-        public GameClass(Socket Handler) 
+        private readonly Socket handler;
+
+        public GameClass(Socket handler)
         {
+            this.handler = handler;
             Console.WriteLine("Welcome to Hangman!");
 
             // Select a word
@@ -27,23 +24,28 @@ namespace HangmanServer
 
             while (true)
             {
-                string? msg = null;
+                StringBuilder stringBuilder = new StringBuilder();
+                string msg = null;
                 byte[] buffer = new byte[1024];
                 // Print the current state of the game
-                Console.WriteLine();
-                Console.WriteLine($"Word: {GetWordToDisplay(wordToGuess, correctGuesses)}");
-                Console.WriteLine($"Lives: {lives}");
-                Console.WriteLine($"Incorrect guesses: {string.Join(", ", incorrectGuesses)}");
+                stringBuilder.Append($"\nWord: {GetWordToDisplay(wordToGuess, correctGuesses)}");
+                stringBuilder.Append($"\nLives: {lives}");
+                stringBuilder.Append($"\nIncorrect guesses: {string.Join(", ", incorrectGuesses)}");
 
-                // Get the user's guess
-                Console.Write("Guess a letter: ");
-                var input = Console.ReadLine();
-                if (input.Length != 1 || !char.IsLetter(input[0]))
+                // Send the game state to the client
+                byte[] messageBytes = Encoding.ASCII.GetBytes(stringBuilder.ToString());
+                handler.Send(messageBytes);
+
+                // Get clients answer and put it in msg
+                while (msg == null)
                 {
-                    Console.WriteLine("Invalid input. Please enter a single letter.");
-                    continue;
+                    int received = handler.Receive(buffer);
+                    msg += Encoding.ASCII.GetString(buffer, 0, received);
                 }
-                var guess = char.ToLower(input[0]);
+
+                // Check if the guess is one c
+                char input = msg[0];
+                var guess = char.ToLower(input);
 
                 // Check if the guess is correct or incorrect
                 if (wordToGuess.Contains(guess))
@@ -51,6 +53,10 @@ namespace HangmanServer
                     correctGuesses.Add(guess);
                     if (HasWon(wordToGuess, correctGuesses))
                     {
+                        string win = "You win!";
+                        byte[] byteArray = System.Text.Encoding.ASCII.GetBytes(win);
+                        handler.Send(byteArray);
+
                         Console.WriteLine("You win!");
                         return;
                     }
@@ -61,12 +67,17 @@ namespace HangmanServer
                     lives--;
                     if (lives == 0)
                     {
+                        string lose = "You lose!";
+                        byte[] byteArray = System.Text.Encoding.ASCII.GetBytes(lose);
+                        handler.Send(byteArray);
+
                         Console.WriteLine("You lose!");
                         return;
                     }
                 }
             }
         }
+
         static string GetWordToDisplay(string wordToGuess, HashSet<char> correctGuesses)
         {
             var wordToDisplay = new StringBuilder();
@@ -98,3 +109,4 @@ namespace HangmanServer
         }
     }
 }
+
